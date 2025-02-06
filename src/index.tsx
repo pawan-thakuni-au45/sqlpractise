@@ -46,6 +46,8 @@ app.post("/signup",async (req,res)=>{
 
         const insertaddressQuery=`INSERT INTO addresses (user_id,city,country,street,pincode) VALUES ($1,$2,$3,$4,$5);`
 
+        await pgClient.query("BEGIN;")
+
         const response=await pgClient.query(insertQuery,[username,email,passsword])
         console.log("ffg",response);
         const userid=response.rows[0].id
@@ -53,6 +55,8 @@ app.post("/signup",async (req,res)=>{
 
         const addressResponse=await pgClient.query(insertaddressQuery,[userid,city,country,street,pincode])
         console.log("chuuuuuuuu",addressResponse);
+
+        await pgClient.query("COMMIT;")
 
         
         res.json({
@@ -66,5 +70,18 @@ app.post("/signup",async (req,res)=>{
     
 
    
+})
+
+app.get("/metadata",async (req,res)=>{
+const id=req.query.id;
+
+const query=`SELECT users.username, users.email, addresses.city, addresses.country , addresses.street,addresses.pincode FROM users JOIN addresses ON users.id=addresses.user_id
+WHERE users.id=$1;`
+
+const response= await pgClient.query(query,[id])
+res.json({
+    response:response.rows
+})
+
 })
 app.listen(3000)

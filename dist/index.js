@@ -46,12 +46,14 @@ app.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const insertQuery = `INSERT INTO users (username,email,password) VALUES ($1, $2,$3) RETURNING id;`;
         const insertaddressQuery = `INSERT INTO addresses (user_id,city,country,street,pincode) VALUES ($1,$2,$3,$4,$5);`;
+        yield pgClient.query("BEGIN;");
         const response = yield pgClient.query(insertQuery, [username, email, passsword]);
         console.log("ffg", response);
         const userid = response.rows[0].id;
         console.log("hbgjhbgyugyugvhj", userid);
         const addressResponse = yield pgClient.query(insertaddressQuery, [userid, city, country, street, pincode]);
         console.log("chuuuuuuuu", addressResponse);
+        yield pgClient.query("COMMIT;");
         res.json({
             message: "signed up user "
         });
@@ -61,5 +63,14 @@ app.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             err
         });
     }
+}));
+app.get("/metadata", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.query.id;
+    const query = `SELECT users.username, users.email, addresses.city, addresses.country , addresses.street,addresses.pincode FROM users JOIN addresses ON users.id=addresses.user_id
+WHERE users.id=$1;`;
+    const response = yield pgClient.query(query, [id]);
+    res.json({
+        response: response.rows
+    });
 }));
 app.listen(3000);
